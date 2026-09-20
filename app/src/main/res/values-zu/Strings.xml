@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">MzansiReady</string>
+    <string name="welcome_back">Siyakwamukela futhi</string>
+    <string name="email">I-imeyili</string>
+    <string name="password">Iphasiwedi</string>
+    <string name="full_name">Igama eliphelele</string>
+    <string name="confirm_password">Qinisekisa iphasiwedi</string>
+    <string name="login">Ngena</string>
+    <string name="register">Bhalisa</string>
+    <string name="logout">Phuma</string>
+    <string name="settings">Izilungiselelo</string>
+    <string name="language">Ulimi</string>
+    <string name="theme">Isimo</string>
+    <string name="notifications">Izaziso</string>
+    <string name="save">Londoloza</string>
+    <string name="english">IsiNgisi</string>
+    <string name="isi_zulu">IsiZulu</string>
+    <string name="light">Ukukhanya</string>
+    <string name="dark">Ubumnyama</string>
+    <string name="enable_notifications">Vumela izaziso</string>
+    <string name="no_account_register">Awunayo i-akhawunti? Bhalisa</string>
+    <string name="have_account_login">Usunayo i-akhawunti? Ngena</string>
+    <string name="create_account">Dala i-akhawunti</string>
+</resources>
