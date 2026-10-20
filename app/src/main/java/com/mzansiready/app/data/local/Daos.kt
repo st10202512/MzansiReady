@@ -25,14 +25,23 @@ interface LocationDao {
     @Query("SELECT * FROM saved_locations WHERE pendingDelete = 0 ORDER BY id ASC")
     suspend fun getVisible(): List<SavedLocationEntity>
 
-    @Query("SELECT * FROM saved_locations WHERE isSynced = 0 OR pendingDelete = 1")
-    suspend fun getPending(): List<SavedLocationEntity>
+    @Query("SELECT * FROM saved_locations WHERE isSynced = 0 AND pendingDelete = 0")
+    suspend fun getUnsyncedLocations(): List<SavedLocationEntity>
+
+    @Query("SELECT * FROM saved_locations WHERE pendingDelete = 1")
+    suspend fun getPendingDeletes(): List<SavedLocationEntity>
 
     @Insert
     suspend fun insert(entity: SavedLocationEntity): Long
 
     @Update
     suspend fun update(entity: SavedLocationEntity)
+
+    @Query("UPDATE saved_locations SET isSynced = 1, remoteId = :remoteId WHERE id = :localId")
+    suspend fun markAsSynced(localId: Int, remoteId: Int)
+
+    @Query("UPDATE saved_locations SET pendingDelete = 1 WHERE id = :id")
+    suspend fun markForDeletion(id: Int)
 
     @Query("DELETE FROM saved_locations WHERE id = :id")
     suspend fun deleteById(id: Int)

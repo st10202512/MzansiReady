@@ -4,6 +4,7 @@ import android.util.Log
 import com.mzansiready.app.data.remote.ApiService
 import com.mzansiready.app.data.remote.dto.ApiError
 import com.mzansiready.app.data.remote.dto.AuthResponse
+import com.mzansiready.app.data.remote.dto.GoogleLoginRequest
 import com.mzansiready.app.data.remote.dto.LoginRequest
 import com.mzansiready.app.data.remote.dto.RegisterRequest
 import com.mzansiready.app.data.remote.dto.SettingsDto
@@ -34,6 +35,22 @@ class AuthRepository(
 
     suspend fun login(email: String, password: String): Result<AuthResponse> = call {
         api.login(LoginRequest(email.trim().lowercase(), password))
+    }
+
+    // --- ADD THIS ---
+    suspend fun googleLogin(idToken: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.googleLogin(GoogleLoginRequest(idToken))
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                session.save(body)
+                Result.success(body)
+            } else {
+                Result.failure(Exception(parseError(response)))
+            }
+        } catch (t: Throwable) {
+            Result.failure(t)
+        }
     }
 
     suspend fun updateSettings(

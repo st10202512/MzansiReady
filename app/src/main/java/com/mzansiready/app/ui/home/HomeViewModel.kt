@@ -1,5 +1,6 @@
 package com.mzansiready.app.ui.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mzansiready.app.data.local.WeatherCacheEntity
@@ -27,7 +28,6 @@ class HomeViewModel(
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
-    // Johannesburg by default
     private val defaultKey = "home"
     private val defaultName = "Johannesburg"
     private val defaultLat = -26.2041
@@ -37,11 +37,11 @@ class HomeViewModel(
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
 
-            // Sync pending locations in the background (best-effort)
+            // Sync any pending offline changes
             try {
                 locationRepository.syncPending()
-            } catch (_: Exception) {
-                // Ignore — weather is more important
+            } catch (e: Exception) {
+                Log.w("HomeViewModel", "Sync failed", e)
             }
 
             weatherRepository.getWeather(

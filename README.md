@@ -113,6 +113,16 @@ text
 - **Localisation**: All user-facing strings use Android string resources for multi-language support
 
 ---
+## 🎨 App Icon & Store Assets
+
+### App Icon
+![App Icon](screenshots/play-store/app_icon_512.png)
+
+### Feature Graphic
+![Feature Graphic](screenshots/play-store/feature_graphic.png)
+
+### Play Store Screenshots
+See the [screenshots/play-store](./screenshots/play-store) folder.
 
 ## 🎬 Demo Video
 

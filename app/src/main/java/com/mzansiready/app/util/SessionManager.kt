@@ -30,11 +30,17 @@ class SessionManager(context: Context) {
     }
 
     fun token(): String? = prefs.getString(KEY_TOKEN, null)
+
     fun bearer(): String = "Bearer ${token().orEmpty()}"
+
     fun isLoggedIn(): Boolean = !token().isNullOrBlank()
+
     fun fullName(): String = prefs.getString(KEY_NAME, "") ?: ""
+
     fun language(): String = prefs.getString(KEY_LANGUAGE, "en") ?: "en"
+
     fun theme(): String = prefs.getString(KEY_THEME, "light") ?: "light"
+
     fun notificationsEnabled(): Boolean = prefs.getBoolean(KEY_NOTIFICATIONS, true)
 
     fun updateSettings(language: String, theme: String, notifications: Boolean) {
@@ -47,6 +53,7 @@ class SessionManager(context: Context) {
 
     fun clear() {
         prefs.edit().clear().apply()
+        Log.d(TAG, "Session cleared")
     }
 
     private companion object {

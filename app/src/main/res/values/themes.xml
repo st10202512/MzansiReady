@@ -1,17 +1,27 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Light Theme (default) -->
+    <!-- Base application theme (Light) -->
     <style name="Theme.MzansiReady" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/secondary</item>
-        <item name="android:windowBackground">@android:color/white</item>
     </style>
 
-    <!-- Dark Theme -->
+    <!-- Dark application theme -->
     <style name="Theme.MzansiReady.Dark" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorSecondary">@color/secondary</item>
-        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.MzansiReady.Splash" parent="Theme.SplashScreen">
+        <!-- Background color of the splash screen -->
+        <item name="windowSplashScreenBackground">#4CAF50</item>
+        <!-- Icon shown in the center -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <!-- Optional: duration of the icon animation (in ms) -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <!-- The theme to apply AFTER the splash screen finishes -->
+        <item name="postSplashScreenTheme">@style/Theme.MzansiReady</item>
     </style>
 </resources>

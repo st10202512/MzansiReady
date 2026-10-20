@@ -1,14 +1,19 @@
 package com.mzansiready.app.ui.settings
 
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 import com.mzansiready.app.MzansiApp
 import com.mzansiready.app.R
 import com.mzansiready.app.data.repo.AuthRepository
@@ -30,10 +35,20 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    // --- Activity Result Launcher for picking an image from the gallery ---
+    private val pickImage = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            uploadProfilePicture(uri)
+        } else {
+            Log.d("SettingsActivity", "No image selected")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Apply saved theme BEFORE inflating layout
         applySavedTheme()
 
         binding = ActivitySettingsBinding.inflate(layoutInflater)
@@ -54,6 +69,11 @@ class SettingsActivity : AppCompatActivity() {
             )
         }
 
+        // --- Upload Profile Picture Button ---
+        binding.btnUploadPic.setOnClickListener {
+            pickImage.launch("image/*")
+        }
+
         lifecycleScope.launch {
             viewModel.state.collect { state ->
                 binding.progress.visibility =
@@ -66,15 +86,37 @@ class SettingsActivity : AppCompatActivity() {
                 if (state.saved) {
                     Toast.makeText(this@SettingsActivity, "Settings saved", Toast.LENGTH_SHORT).show()
                     viewModel.consumeSaved()
-
-                    // Apply language immediately
                     applyLanguage(state.language)
-
-                    // Recreate the activity so the new theme takes effect
                     recreate()
                 }
             }
         }
+    }
+
+    // --- Upload image to Firebase Storage ---
+    private fun uploadProfilePicture(uri: Uri) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            Toast.makeText(this, "Please sign in with Google first", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val storageRef = FirebaseStorage.getInstance().reference
+        val profilePicRef = storageRef.child("profile_pictures/${user.uid}.jpg")
+
+        binding.progress.visibility = View.VISIBLE
+
+        profilePicRef.putFile(uri)
+            .addOnSuccessListener {
+                Log.d("SettingsActivity", "Profile picture uploaded successfully")
+                Toast.makeText(this, "Profile picture uploaded!", Toast.LENGTH_SHORT).show()
+                binding.progress.visibility = View.GONE
+            }
+            .addOnFailureListener { e ->
+                Log.e("SettingsActivity", "Upload failed", e)
+                Toast.makeText(this, "Upload failed: ${e.message}", Toast.LENGTH_LONG).show()
+                binding.progress.visibility = View.GONE
+            }
     }
 
     private fun applySavedTheme() {

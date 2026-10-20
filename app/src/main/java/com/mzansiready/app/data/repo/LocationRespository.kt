@@ -1,5 +1,6 @@
 package com.mzansiready.app.data.repo
 
+import android.util.Log
 import com.mzansiready.app.data.local.LocationDao
 import com.mzansiready.app.data.local.SavedLocationEntity
 import com.mzansiready.app.data.remote.ApiService
@@ -17,13 +18,19 @@ class LocationRepository(
     private val network: NetworkMonitor
 ) {
 
+    companion object {
+        private const val TAG = "LocationRepository"
+    }
+
     suspend fun refresh(): Result<List<SavedLocationEntity>> = withContext(Dispatchers.IO) {
         try {
             if (network.isOnline()) {
+                Log.d(TAG, "Online: fetching locations from API")
                 val response = api.getLocations(session.bearer())
-                if (response.isSuccessful && response.body() != null) {
+                val body = response.body()
+                if (response.isSuccessful && body != null) {
                     dao.clear()
-                    response.body()!!.forEach { dto ->
+                    body.forEach { dto ->
                         dao.insert(
                             SavedLocationEntity(
                                 remoteId = dto.locationId,
@@ -36,9 +43,12 @@ class LocationRepository(
                         )
                     }
                 }
+            } else {
+                Log.d(TAG, "Offline: returning cached locations")
             }
             Result.success(dao.getVisible())
         } catch (t: Throwable) {
+            Log.e(TAG, "Refresh failed, returning cache", t)
             Result.success(dao.getVisible())
         }
     }
@@ -47,24 +57,27 @@ class LocationRepository(
         withContext(Dispatchers.IO) {
             try {
                 if (network.isOnline()) {
+                    Log.d(TAG, "Online: adding location to API")
                     val response = api.createLocation(
                         session.bearer(),
                         CreateLocationRequest(name, latitude, longitude)
                     )
-                    if (response.isSuccessful && response.body() != null) {
-                        val dto: LocationDto = response.body()!!
+                    val body: LocationDto? = response.body()
+                    if (response.isSuccessful && body != null) {
                         dao.insert(
                             SavedLocationEntity(
-                                remoteId = dto.locationId,
-                                name = dto.name,
-                                latitude = dto.latitude,
-                                longitude = dto.longitude,
+                                remoteId = body.locationId,
+                                name = body.name,
+                                latitude = body.latitude,
+                                longitude = body.longitude,
                                 isSynced = true
                             )
                         )
                         return@withContext Result.success(Unit)
                     }
                 }
+
+                Log.d(TAG, "Offline: saving location locally for later sync")
                 dao.insert(
                     SavedLocationEntity(
                         name = name,
@@ -75,6 +88,7 @@ class LocationRepository(
                 )
                 Result.success(Unit)
             } catch (t: Throwable) {
+                Log.e(TAG, "Add failed, saving offline", t)
                 dao.insert(
                     SavedLocationEntity(
                         name = name,
@@ -90,50 +104,76 @@ class LocationRepository(
     suspend fun delete(entity: SavedLocationEntity): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             if (entity.remoteId != null && network.isOnline()) {
+                Log.d(TAG, "Online: deleting from API")
                 val response = api.deleteLocation(session.bearer(), entity.remoteId)
                 if (response.isSuccessful) {
                     dao.deleteById(entity.id)
                     return@withContext Result.success(Unit)
                 }
             }
+
             if (entity.remoteId == null) {
                 dao.deleteById(entity.id)
             } else {
-                dao.update(entity.copy(pendingDelete = true))
+                dao.markForDeletion(entity.id)
             }
             Result.success(Unit)
         } catch (t: Throwable) {
-            dao.update(entity.copy(pendingDelete = true))
+            dao.markForDeletion(entity.id)
             Result.success(Unit)
         }
     }
 
     suspend fun syncPending(): Result<Unit> = withContext(Dispatchers.IO) {
-        if (!network.isOnline()) return@withContext Result.success(Unit)
+        if (!network.isOnline()) {
+            Log.d(TAG, "Not online, skipping sync")
+            return@withContext Result.success(Unit)
+        }
+
+        Log.d(TAG, "Starting sync of pending changes")
+
         try {
-            dao.getPending().forEach { entity ->
-                if (entity.pendingDelete && entity.remoteId != null) {
-                    api.deleteLocation(session.bearer(), entity.remoteId)
-                    dao.deleteById(entity.id)
-                } else if (!entity.isSynced && entity.remoteId == null) {
+            val unsyncedLocations = dao.getUnsyncedLocations()
+            Log.d(TAG, "Syncing ${unsyncedLocations.size} unsynced locations")
+
+            unsyncedLocations.forEach { entity ->
+                try {
                     val response = api.createLocation(
                         session.bearer(),
                         CreateLocationRequest(entity.name, entity.latitude, entity.longitude)
                     )
-                    if (response.isSuccessful && response.body() != null) {
-                        dao.deleteById(entity.id)
-                        dao.insert(
-                            entity.copy(
-                                id = 0,
-                                remoteId = response.body()!!.locationId,
-                                isSynced = true
-                            )
-                        )
+                    val body: LocationDto? = response.body()
+                    if (response.isSuccessful && body != null) {
+                        dao.markAsSynced(entity.id, body.locationId)
+                        Log.d(TAG, "Synced location: ${entity.name}")
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to sync location: ${entity.name}", e)
                 }
             }
+
+            val pendingDeletes = dao.getPendingDeletes()
+            Log.d(TAG, "Syncing ${pendingDeletes.size} pending deletes")
+
+            pendingDeletes.forEach { entity ->
+                try {
+                    if (entity.remoteId != null) {
+                        val response = api.deleteLocation(session.bearer(), entity.remoteId)
+                        if (response.isSuccessful) {
+                            dao.deleteById(entity.id)
+                            Log.d(TAG, "Synced deletion: ${entity.name}")
+                        }
+                    } else {
+                        dao.deleteById(entity.id)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to sync deletion: ${entity.name}", e)
+                }
+            }
+
             Result.success(Unit)
         } catch (t: Throwable) {
+            Log.e(TAG, "Sync failed", t)
             Result.failure(t)
         }
     }

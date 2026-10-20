@@ -49,3 +49,7 @@ data class AlertDto(
     val category: String,
     val area: String
 )
+
+data class GoogleLoginRequest(
+    val idToken: String
+)

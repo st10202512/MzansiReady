@@ -47,5 +47,23 @@ class LoginViewModel(
         }
     }
 
-    fun consumeError() = _state.update { it.copy(error = null) }
+    // --- ADD THIS ---
+    fun loginWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(loading = true, error = null) }
+            repository.googleLogin(idToken)
+                .onSuccess {
+                    _state.update { it.copy(loading = false, success = true) }
+                }
+                .onFailure { t ->
+                    _state.update {
+                        it.copy(loading = false, error = t.message ?: "Google login failed")
+                    }
+                }
+        }
+    }
+
+    fun consumeError() {
+        _state.update { it.copy(error = null) }
+    }
 }

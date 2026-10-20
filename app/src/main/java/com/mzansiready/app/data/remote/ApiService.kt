@@ -3,6 +3,7 @@ package com.mzansiready.app.data.remote
 import com.mzansiready.app.data.remote.dto.AlertDto
 import com.mzansiready.app.data.remote.dto.AuthResponse
 import com.mzansiready.app.data.remote.dto.CreateLocationRequest
+import com.mzansiready.app.data.remote.dto.GoogleLoginRequest
 import com.mzansiready.app.data.remote.dto.LocationDto
 import com.mzansiready.app.data.remote.dto.LoginRequest
 import com.mzansiready.app.data.remote.dto.RegisterRequest
@@ -23,6 +24,9 @@ interface ApiService {
 
     @POST("api/auth/login")
     suspend fun login(@Body body: LoginRequest): Response<AuthResponse>
+
+    @POST("api/auth/google")
+    suspend fun googleLogin(@Body body: GoogleLoginRequest): Response<AuthResponse>
 
     @GET("api/users/settings")
     suspend fun getSettings(@Header("Authorization") bearer: String): Response<SettingsDto>
