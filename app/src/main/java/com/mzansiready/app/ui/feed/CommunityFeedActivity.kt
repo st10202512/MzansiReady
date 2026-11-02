@@ -5,12 +5,13 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.mzansiready.app.MzansiApp
 import com.mzansiready.app.databinding.ActivityCommunityFeedBinding
-import com.mzansiready.app.ui.auth.LoginActivity
 import kotlinx.coroutines.launch
 
 class CommunityFeedActivity : AppCompatActivity() {
@@ -27,7 +28,11 @@ class CommunityFeedActivity : AppCompatActivity() {
     private lateinit var adapter: FeedAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // ✅ FIX: apply saved theme BEFORE super.onCreate
+        applySavedTheme()
+
         super.onCreate(savedInstanceState)
+
         binding = ActivityCommunityFeedBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -59,5 +64,14 @@ class CommunityFeedActivity : AppCompatActivity() {
         viewModel.feedPosts.observe(this) { posts ->
             adapter.submitList(posts)
         }
+    }
+
+    // ✅ FIX: apply saved theme app-wide
+    private fun applySavedTheme() {
+        val savedTheme = MzansiApp.from(this).session.theme()
+        AppCompatDelegate.setDefaultNightMode(
+            if (savedTheme == "dark") AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
     }
 }

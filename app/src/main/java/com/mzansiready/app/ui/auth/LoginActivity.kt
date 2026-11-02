@@ -8,8 +8,10 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -17,9 +19,13 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -38,7 +44,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var credentialManager: CredentialManager
     private lateinit var firebaseAuth: FirebaseAuth
 
-    // Your Web Client ID from Google Cloud Console
+    // ⚠️ Use the WEB Client ID (from google-services.json, client_type = 3)
     private val webClientId = "47253500490-l27i29j8mgcacvkjuc3djstoornhicb6.apps.googleusercontent.com"
 
     private val viewModel: LoginViewModel by viewModels {
@@ -51,14 +57,33 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    // ── Fallback launcher for legacy Google Sign-In (used when Credential Manager fails)
+    private val legacySignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            account.idToken?.let {
+                Log.d("LoginActivity", "Legacy sign-in succeeded, idToken received")
+                firebaseAuthWithGoogle(it)
+            } ?: run {
+                Log.e("LoginActivity", "Legacy sign-in: no ID token")
+                Toast.makeText(this, "No ID token received", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: ApiException) {
+            Log.e("LoginActivity", "Legacy sign-in failed: code=${e.statusCode}", e)
+            Toast.makeText(this, "Sign-In failed (code ${e.statusCode})", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // ✅ INSTALL THE SPLASH SCREEN BEFORE super.onCreate()
         installSplashScreen()
 
-        super.onCreate(savedInstanceState)
-
-        // Apply saved theme BEFORE inflating layout
+        // Apply theme BEFORE super.onCreate so the window uses the right theme
         applySavedTheme()
+
+        super.onCreate(savedInstanceState)
 
         val app = MzansiApp.from(this)
         if (app.session.isLoggedIn()) {
@@ -69,7 +94,6 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Initialize Firebase and Credential Manager
         firebaseAuth = FirebaseAuth.getInstance()
         credentialManager = CredentialManager.create(this)
 
@@ -84,7 +108,6 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
 
-        // --- GOOGLE SIGN-IN BUTTON ---
         binding.btnGoogleSignIn.setOnClickListener {
             signInWithGoogle()
         }
@@ -100,43 +123,9 @@ class LoginActivity : AppCompatActivity() {
                     viewModel.consumeError()
                 }
                 if (state.success) {
-                    // Request notification permission BEFORE going home
                     requestNotificationPermission()
                     goHome()
                 }
-            }
-        }
-    }
-
-    // --- REQUEST NOTIFICATION PERMISSION ---
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    101
-                )
-            }
-        }
-    }
-
-    // --- HANDLE PERMISSION RESULT ---
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 101) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d("LoginActivity", "Notification permission granted")
-            } else {
-                Log.w("LoginActivity", "Notification permission denied")
             }
         }
     }
@@ -157,7 +146,9 @@ class LoginActivity : AppCompatActivity() {
                 val result = credentialManager.getCredential(this@LoginActivity, request)
                 val credential = result.credential
 
-                if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
                     try {
                         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                         val idToken = googleIdTokenCredential.idToken
@@ -167,11 +158,27 @@ class LoginActivity : AppCompatActivity() {
                         Toast.makeText(this@LoginActivity, "Google Sign-In failed", Toast.LENGTH_SHORT).show()
                     }
                 }
+            } catch (e: GetCredentialProviderConfigurationException) {
+                // ── FALLBACK: Play Services not available on this device
+                //    → use the legacy GoogleSignInClient API instead
+                Log.w("LoginActivity", "Credential Manager provider missing, falling back to legacy sign-in", e)
+                signInWithLegacyGoogle()
             } catch (e: GetCredentialException) {
-                Log.e("LoginActivity", "Credential Manager error", e)
-                Toast.makeText(this@LoginActivity, "Google Sign-In cancelled", Toast.LENGTH_SHORT).show()
+                Log.e("LoginActivity", "Credential Manager error: type=${e.type} message=${e.message}", e)
+                Toast.makeText(this@LoginActivity, "Google Sign-In cancelled: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    // ── Legacy Google Sign-In fallback (works on more devices)
+    private fun signInWithLegacyGoogle() {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
+
+        val client = GoogleSignIn.getClient(this, gso)
+        legacySignInLauncher.launch(client.signInIntent)
     }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
@@ -203,12 +210,42 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 101) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("LoginActivity", "Notification permission granted")
+            }
+        }
+    }
+
+    // ✅ FIX: use AppCompatDelegate so the whole app switches themes
     private fun applySavedTheme() {
         val savedTheme = MzansiApp.from(this).session.theme()
-        when (savedTheme) {
-            "dark" -> setTheme(R.style.Theme_MzansiReady_Dark)
-            else -> setTheme(R.style.Theme_MzansiReady)
-        }
+        AppCompatDelegate.setDefaultNightMode(
+            if (savedTheme == "dark") AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
     }
 
     private fun goHome() {

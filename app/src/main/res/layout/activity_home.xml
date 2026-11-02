@@ -73,6 +73,13 @@
                 android:layout_marginTop="32dp"
                 android:text="@string/settings" />
 
+            <Button
+                android:id="@+id/btnCommunityFeed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Community Feed" />
+
             <!-- ✅ NOW USES @string/logout -->
             <Button
                 android:id="@+id/btnLogout"

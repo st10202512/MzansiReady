@@ -47,7 +47,7 @@ class LoginViewModel(
         }
     }
 
-    // --- ADD THIS ---
+    // Google Sign-In via Firebase ID token
     fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }

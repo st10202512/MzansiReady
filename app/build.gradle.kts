@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
-    id("com.google.gms.google-services") // Required for Firebase
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -60,50 +60,48 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.4")
     implementation("androidx.activity:activity-ktx:1.9.1")
 
-    // --- NETWORKING (REST API) ---
+    // --- NETWORKING ---
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // --- LOCAL STORAGE & SECURITY ---
+    // --- ROOM DATABASE ---
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-    // --- BACKGROUND WORK (Offline Sync) ---
+    // --- WORKMANAGER ---
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // =====================================================================
-    // --- PART 3 ADDITIONS: FIREBASE & GOOGLE AUTH ---
+    // --- PART 3: FIREBASE & GOOGLE AUTH (Samsung compatible) ---
     // =====================================================================
 
-    // Firebase Authentication (For SSO)
+    // Firebase Authentication
     implementation("com.google.firebase:firebase-auth:23.1.0")
 
-    // Firebase Cloud Messaging (For Push Notifications)
+    // Firebase Cloud Messaging
     implementation("com.google.firebase:firebase-messaging:24.0.0")
 
-    // Firebase Firestore (NoSQL Database)
+    // Firebase Firestore (NoSQL)
     implementation("com.google.firebase:firebase-firestore:25.0.0")
 
-    // Firebase Storage (Blob Storage)
+    // Firebase Storage (only if using Blaze plan)
     implementation("com.google.firebase:firebase-storage:21.0.0")
 
-    // Google Play Services Auth (Required for the SignInButton UI component)
+    // Google Play Services Auth
     implementation("com.google.android.gms:play-services-auth:20.7.0")
 
-    // Credential Manager (For the modern Google Sign-In flow)
+    // Credential Manager (native Google Sign-In for devices with Play Services)
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
-    // --- SPLASH SCREEN ---
+    // Splash Screen
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    // =====================================================================
     // --- TESTING ---
-    // =====================================================================
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.11")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -19,6 +20,7 @@ import com.mzansiready.app.data.repo.LocationRepository
 import com.mzansiready.app.data.repo.WeatherRepository
 import com.mzansiready.app.databinding.ActivityHomeBinding
 import com.mzansiready.app.ui.auth.LoginActivity
+import com.mzansiready.app.ui.feed.CommunityFeedActivity
 import com.mzansiready.app.ui.settings.SettingsActivity
 import com.mzansiready.app.util.WeatherCodes
 import kotlinx.coroutines.launch
@@ -26,6 +28,7 @@ import kotlinx.coroutines.launch
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeBinding
+
     private val viewModel: HomeViewModel by viewModels {
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
@@ -39,22 +42,31 @@ class HomeActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+        // Apply saved theme BEFORE super.onCreate
         applySavedTheme()
+
+        super.onCreate(savedInstanceState)
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // --- REQUEST NOTIFICATION PERMISSION ON ANDROID 13+ ---
+        // Request notification permission on Android 13+
         requestNotificationPermission()
 
         val app = MzansiApp.from(this)
         binding.tvGreeting.text = "Hello, ${app.session.fullName()}!"
 
+        // Settings button
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
+
+        // Community Feed button
+        binding.btnCommunityFeed.setOnClickListener {
+            startActivity(Intent(this, CommunityFeedActivity::class.java))
+        }
+
+        // Logout button
         binding.btnLogout.setOnClickListener {
             app.authRepository.logout()
             startActivity(Intent(this, LoginActivity::class.java).apply {
@@ -62,15 +74,17 @@ class HomeActivity : AppCompatActivity() {
             })
             finish()
         }
+
+        // Pull-to-refresh
         binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
 
+        // Observe weather state
         lifecycleScope.launch {
             viewModel.state.collect { state ->
                 binding.progress.visibility =
                     if (state.loading) View.VISIBLE else View.GONE
                 binding.swipeRefresh.isRefreshing = false
 
-                // Always show weather (either live, cached, or placeholder)
                 state.weather?.let { w ->
                     binding.tvLocation.text = w.locationName
                     binding.tvTemp.text = "${w.temperature.toInt()}°C"
@@ -78,7 +92,6 @@ class HomeActivity : AppCompatActivity() {
                     binding.tvMinMax.text = "Min ${w.minTemperature.toInt()}°  Max ${w.maxTemperature.toInt()}°"
                     binding.tvRain.text = "Rain chance ${w.rainProbability}%"
                 } ?: run {
-                    // No weather at all — show friendly message
                     binding.tvLocation.text = "—"
                     binding.tvTemp.text = "—°C"
                     binding.tvCondition.text = state.error ?: "Loading weather..."
@@ -94,7 +107,6 @@ class HomeActivity : AppCompatActivity() {
         viewModel.refresh()
     }
 
-    // --- REQUEST NOTIFICATION PERMISSION ---
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
@@ -111,7 +123,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    // --- HANDLE PERMISSION RESULT ---
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -127,11 +138,12 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    // ✅ FIX: use AppCompatDelegate so the whole app switches themes
     private fun applySavedTheme() {
         val savedTheme = MzansiApp.from(this).session.theme()
-        when (savedTheme) {
-            "dark" -> setTheme(R.style.Theme_MzansiReady_Dark)
-            else -> setTheme(R.style.Theme_MzansiReady)
-        }
+        AppCompatDelegate.setDefaultNightMode(
+            if (savedTheme == "dark") AppCompatDelegate.MODE_NIGHT_YES
+            else AppCompatDelegate.MODE_NIGHT_NO
+        )
     }
 }

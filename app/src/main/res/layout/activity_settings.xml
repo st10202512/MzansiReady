@@ -9,11 +9,11 @@
         android:orientation="vertical"
         android:padding="20dp">
 
-        <!-- Upload Profile Picture Section -->
+        <!-- Profile Picture Section -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Profile Picture"
+            android:text="@string/profile_picture"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginTop="8dp" />
@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Upload Profile Picture" />
+            android:text="@string/upload_profile_picture" />
 
         <!-- Language Section -->
         <TextView
@@ -35,6 +35,7 @@
             android:layout_marginTop="20dp" />
 
         <RadioGroup
+            android:id="@+id/radioGroupLanguage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -50,6 +51,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/isi_zulu" />
+
+            <RadioButton
+                android:id="@+id/radioIsiXhosa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/isi_xhosa" />
+
+            <RadioButton
+                android:id="@+id/radioAfrikaans"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/afrikaans" />
         </RadioGroup>
 
         <!-- Theme Section -->
@@ -62,6 +75,7 @@
             android:layout_marginTop="20dp" />
 
         <RadioGroup
+            android:id="@+id/radioGroupTheme"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">

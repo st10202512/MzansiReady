@@ -8,8 +8,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // Using ADB reverse: emulator's localhost tunnels to PC's localhost:5250
-    private const val API_BASE_URL = "http://localhost:5250/"
+    // Using ADB reverse: emulator's localhost tunnels to PC's ngrok:5250
+    private const val API_BASE_URL = "https://sheath-stallion-static.ngrok-free.dev/"
     private const val WEATHER_BASE_URL = "https://api.open-meteo.com/"
 
     private val httpClient: OkHttpClient by lazy {

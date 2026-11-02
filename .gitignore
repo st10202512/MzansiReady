@@ -1,3 +1,4 @@
+# ──────────────── ANDROID ────────────────
 *.iml
 .gradle
 /local.properties
@@ -10,3 +11,25 @@
 local.properties
 /app/build
 *.log
+
+# ──────────────── SECRETS (DO NOT COMMIT) ────────────────
+# Android signing keystores — never commit these
+*.jks
+*.keystore
+
+# Firebase config — contains API keys
+google-services.json
+
+# Backend config with connection strings
+appsettings.Development.json
+appsettings.Production.json
+
+# ──────────────── BACKEND (.NET) ────────────────
+bin/
+obj/
+*.user
+*.suo
+
+# ──────────────── IDE / OS ────────────────
+.vscode/
+Thumbs.db

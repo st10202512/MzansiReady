@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name" translatable="false">MzansiReady</string>
+    <string name="welcome_back">Welkom terug</string>
+    <string name="email">E-pos</string>
+    <string name="password">Wagwoord</string>
+    <string name="full_name">Volle naam</string>
+    <string name="confirm_password">Bevestig wagwoord</string>
+    <string name="login">Teken in</string>
+    <string name="register">Registreer</string>
+    <string name="logout">Teken uit</string>
+    <string name="settings">Instellings</string>
+    <string name="language">Taal</string>
+    <string name="theme">Tema</string>
+    <string name="notifications">Kennisgewings</string>
+    <string name="save">Stoor</string>
+    <string name="english">Engels</string>
+    <string name="isi_zulu">isiZulu</string>
+    <string name="isi_xhosa">isiXhosa</string>
+    <string name="afrikaans">Afrikaans</string>
+    <string name="light">Lig</string>
+    <string name="dark">Donker</string>
+    <string name="enable_notifications">Aktiveer kennisgewings</string>
+    <string name="no_account_register">Het jy nie \'n rekening nie? Registreer</string>
+    <string name="have_account_login">Het jy reeds \'n rekening? Teken in</string>
+    <string name="create_account">Skep rekening</string>
+    <string name="profile_picture">Profielfoto</string>
+    <string name="upload_profile_picture">Laai profielfoto op</string>
+</resources>

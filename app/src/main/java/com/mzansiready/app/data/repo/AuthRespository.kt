@@ -37,7 +37,7 @@ class AuthRepository(
         api.login(LoginRequest(email.trim().lowercase(), password))
     }
 
-    // --- ADD THIS ---
+    // Google Sign-In via Firebase ID token
     suspend fun googleLogin(idToken: String): Result<AuthResponse> = withContext(Dispatchers.IO) {
         try {
             val response = api.googleLogin(GoogleLoginRequest(idToken))
