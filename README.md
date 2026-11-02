@@ -1,3 +1,10 @@
+**Group:** 8
+**Module:** OPSC6312  
+**Course:** Information Technology   
+**Demo Video:** [https://youtu.be/3pmLt_MpE-4?si=zcrNW_YKXeAs9hvI]  
+**Repository:** https://github.com/st10202512/MzansiReady  
+**Release APK:** https://github.com/st10202512/MzansiReady/releases
+
 # MzansiReady
 
 A South African daily information and preparedness Android application built with Kotlin, connecting to a custom ASP.NET Core REST API and the Open-Meteo weather service.
@@ -35,13 +42,16 @@ MzansiReady brings together weather information, community alerts, and daily pre
 ### Multi-Language Support
 - English (default)
 - isiZulu
-- User-selectable from Settings
+- isiXhosa
+- Afrikaans
+- User-selectable from Settings, persisted locally and on the backend
 
 ### Settings
-- Language selection (English / isiZulu)
+- Language selection (English / isiZulu / IsiXhosa / Afrikaans)
 - Theme selection (Light / Dark)
 - Notification preferences
 - Persisted locally and synced with the backend
+- Upload pp
 
 ### Security
 - HTTPS-ready API communication
@@ -80,6 +90,7 @@ MzansiReady brings together weather information, community alerts, and daily pre
 ### CI/CD
 
 - **GitHub Actions** — automated build and unit tests on every push
+[![Android CI](https://github.com/st10202512/MzansiReady/actions/workflows/build.yml/badge.svg)](https://github.com/st10202512/MzansiReady/actions/workflows/build.yml)
 
 ---
 
@@ -126,19 +137,21 @@ See the [screenshots/play-store](./screenshots/play-store) folder.
 
 ## 🎬 Demo Video
 
-[Watch the full demonstration on YouTube](https://youtu.be/WXBZaKqEBpA)
+[▶️ Watch the final PoE demonstration on YouTube](https://youtu.be/3pmLt_MpE-4?si=zcrNW_YKXeAs9hvI)
 
 The video demonstrates:
 - User registration and login
 - Password hashing (verified in Supabase)
+- Google Sign-In (SSO)
 - Live weather from Open-Meteo
-- Multi-language switching (English ↔ isiZulu)
+- Multi-language switching (English ↔ isiZulu ↔ isiXhosa ↔ Afrikaans)
 - Theme switching (Light ↔ Dark)
-- Offline mode with cached weather
+- Offline mode with cached weather + sync
+- Community Feed with Firestore
+- Profile picture upload
+- Push notifications (FCM)
 - Backend REST API (Swagger)
 - Database contents in Supabase
-
----
 
 ## 📸 Screenshots
 
@@ -170,6 +183,56 @@ The video demonstrates:
 ![Swagger](screenshots/09-swagger.png)
 
 ---
+## 📚 Full Documentation
+
+Complete documentation for each phase is available in the [`screenshots/`](screenshots/) folder:
+
+| Phase | Documentation | Screenshots |
+|-------|---------------|-------------|
+| **Phase 1** | [README](phase-1/README.md) | [Screenshots](phase-1/screenshots/) |
+| **Phase 2** | [README](phase-2/README.md) | [Screenshots](phase-2/screenshots/) |
+| **Phase 3** | [README](phase-3/README.md) | [Screenshots](phase-3/screenshots/) |
+
+
+## 🚀 Release Notes — v1.0 (Part 3)
+
+### What's New Since the Prototype
+
+This is the final release of MzansiReady, updated from the Part 2 prototype.
+
+#### New Features Added
+- **Google Sign-In (SSO)**: One-tap authentication using Google accounts
+- **Push Notifications (FCM)**: Real-time alerts via Firebase Cloud Messaging
+- **Offline Sync**: Room database + WorkManager syncs data when connectivity returns
+- **Community Feed (Firestore NoSQL)**: Users can post messages visible to all
+- **Profile Picture Upload (Firestore)**: User profile pictures stored as Base64 in Firestore
+- **Multi-language Support**: English and isiZulu with full translation
+- **App Icon & Splash Screen**: Custom branding for Play Store
+- **Play Store Preparation**: Signed AAB and Play Console assets ready
+
+#### Bug Fixes & Improvements
+- Fixed redirect URI handling for Google Sign-In on Huawei devices
+- Improved error handling across all forms
+- Added input validation to all user inputs
+- Added logging throughout the codebase
+- Improved UI consistency with Material 3
+
+#### Known Limitations
+- Play Console account pending (requires $25 fee) — signed AAB ready for upload
+- Firebase Storage requires Blaze plan — profile pictures stored in Firestore instead
+
+### Version History
+- **v1.0** (Part 3 Final) — All features implemented, signed AAB ready
+- **v0.9** (Part 2 Prototype) — Basic app with weather, settings, multi-language
+
+## 🤖 AI Tools Disclosure
+
+In accordance with the assignment policy on AI tool use, the following AI tools were used during this project:
+
+- **Claude (Anthropic)** — Used for code review, debugging assistance (specifically resolving Google Sign-In configuration errors, ASP.NET Core API validation issues, and multi-language resource setup), and structuring this README. All AI-suggested code was reviewed, tested, and understood before inclusion.
+- **Android Studio's built-in AI assistance** — For autocomplete and import suggestions only.
+
+No AI tool was used to generate the app's core logic, architecture decisions, or documentation without active engagement and verification. Every feature was tested on a real Android device before inclusion in the demo video.
 
 ## 🚀 How to Run
 
